@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
@@ -8,8 +8,8 @@ import {
   BarChart3,
   Bot,
   BrainCircuit,
-  ChevronDown,
   CircleHelp,
+  ChevronDown,
   Download,
   FileText,
   Filter,
@@ -17,7 +17,6 @@ import {
   LayoutDashboard,
   Menu,
   Search,
-  Settings2,
   ShieldCheck,
   Sparkles,
   Users,
@@ -70,6 +69,22 @@ export default function Page() {
   const [advisorOpen, setAdvisorOpen] = useState(false)
   const [aiText, setAiText] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
+  const [greeting, setGreeting] = useState('Good morning')
+  const [today, setToday] = useState('')
+
+  useEffect(() => {
+    const now = new Date()
+    const hour = now.getHours()
+    setGreeting(hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening')
+    setToday(new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(now))
+  }, [])
+
+  function selectCustomer(customer: Customer, openAdvisor = false) {
+    setSelected(customer)
+    setAiText('')
+    setAiLoading(false)
+    if (openAdvisor) setAdvisorOpen(true)
+  }
 
   const filtered = useMemo(() => customers.filter((customer) => customer.id.toLowerCase().includes(query.toLowerCase())), [query])
 
@@ -79,7 +94,7 @@ export default function Page() {
     try {
       const response = await fetch('/api/recommendations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer: selected }) })
       const data = await response.json()
-      setAiText(data.text || 'No recommendation returned.')
+      setAiText(data.text || `Prioritize a ${selected.contract.toLowerCase()} contract review, address the ${selected.payment.toLowerCase()} payment experience, and follow up on ${selected.internet.toLowerCase()} service quality.`)
     } catch {
       setAiText('Unable to connect to the advisor right now. Use the account signals above to prioritize a contract review, pricing check, and service follow-up.')
     } finally { setAiLoading(false) }
@@ -93,14 +108,13 @@ export default function Page() {
         <nav className="nav-list" aria-label="Main navigation">
           {nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${active === label ? 'active' : ''}`} onClick={() => { setActive(label); setMobileOpen(false) }}><Icon size={17} /><span>{label}</span>{label === 'Retention advisor' && <span className="nav-badge">AI</span>}</button>)}
         </nav>
-        <div className="sidebar-bottom"><div className="model-card"><div className="model-icon"><Sparkles size={15} /></div><div><strong>Explainable AI</strong><span>flint-v1.0 · OpenRouter</span></div><span className="status-dot" /></div><button className="nav-item"><Settings2 size={17} /><span>Settings</span></button><div className="profile"><div className="avatar">AR</div><div><strong>Alex Rivera</strong><span>Data strategist</span></div><ChevronDown size={15} /></div></div>
       </aside>
 
       <main className="main-content">
-        <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu"><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><span>/</span><strong>{active}</strong></div><div className="top-actions"><span className="live-dot" /> <span className="live-label">Live dataset</span><button className="icon-button" aria-label="Help"><CircleHelp size={18} /></button><button className="avatar small">AR</button></div></header>
+        <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu"><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><span>/</span><strong>{active}</strong></div></header>
 
         <div className="page-wrap">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> MONDAY, NOVEMBER 04, 2024</div><h1>Good morning, Alex<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><button className="export-btn"><Download size={16} /> Export report</button></div>
+          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, Alex<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><button className="export-btn"><Download size={16} /> Export report</button></div>
 
           <section className="kpi-grid" aria-label="Key performance indicators">
             {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '$64.76', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
@@ -114,14 +128,14 @@ export default function Page() {
 
           <div className="content-grid lower"><section className="panel factors-panel"><div className="panel-heading"><div><h2>What&apos;s driving churn?</h2><p>Top contributing factors from current dataset</p></div><span className="info-label"><CircleHelp size={14} /> Explainable model</span></div><div className="factor-list">{[['Month-to-month contract', 78, 'Contract flexibility'], ['Electronic check payments', 64, 'Payment friction'], ['Fiber optic service', 51, 'Service experience'], ['High monthly charges', 43, 'Price sensitivity']].map(([label, value, detail]) => <div className="factor-row" key={label as string}><div className="factor-meta"><div><strong>{label}</strong><span>{detail}</span></div><b>{value}%</b></div><div className="factor-track"><i style={{ width: `${value}%` }} /></div></div>)}</div><button className="full-link" onClick={() => setActive('Churn analysis')}>Explore all factors <ArrowUpRight size={14} /></button></section>
 
-            <section className="panel priority-panel"><div className="panel-heading"><div><h2>Retention priorities</h2><p>Accounts requiring attention today</p></div><span className="priority-count">12 new</span></div><div className="priority-list">{customers.slice(0, 4).map((customer) => <button className="priority-row" key={customer.id} onClick={() => { setSelected(customer); setAdvisorOpen(true) }}><div className="priority-avatar">{customer.id.slice(0, 2)}</div><div className="priority-info"><strong>{customer.id}</strong><span>{customer.contract} · {customer.tenure} mo.</span></div><RiskPill risk={customer.risk} /><ArrowUpRight size={15} /></button>)}</div><button className="full-link" onClick={() => setActive('Customer explorer')}>See all priority accounts <ArrowUpRight size={14} /></button></section></div>
+            <section className="panel priority-panel"><div className="panel-heading"><div><h2>Retention priorities</h2><p>Accounts requiring attention today</p></div><span className="priority-count">12 new</span></div><div className="priority-list">{customers.slice(0, 4).map((customer) => <button className="priority-row" key={customer.id} onClick={() => selectCustomer(customer, true)}><div className="priority-avatar">{customer.id.slice(0, 2)}</div><div className="priority-info"><strong>{customer.id}</strong><span>{customer.contract} · {customer.tenure} mo.</span></div><RiskPill risk={customer.risk} /><ArrowUpRight size={15} /></button>)}</div><button className="full-link" onClick={() => setActive('Customer explorer')}>See all priority accounts <ArrowUpRight size={14} /></button></section></div>
 
-          <section className="panel explorer-panel"><div className="panel-heading explorer-heading"><div><h2>Customer explorer</h2><p>Search and inspect account-level churn signals</p></div><div className="explorer-actions"><div className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search customer ID" aria-label="Search customer ID" />{query && <button onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button>}</div><button className="filter-btn"><Filter size={15} /> Filters <span>2</span></button></div></div><div className="table-wrap"><table><thead><tr><th>Customer ID</th><th>Contract</th><th>Internet service</th><th>Tenure</th><th>Monthly charge</th><th>Churn risk</th><th /></tr></thead><tbody>{filtered.map((customer) => <tr key={customer.id} onClick={() => setSelected(customer)} className={selected.id === customer.id ? 'selected-row' : ''}><td><strong>{customer.id}</strong></td><td>{customer.contract}</td><td>{customer.internet}</td><td>{customer.tenure} months</td><td>${customer.monthly.toFixed(2)}</td><td><RiskPill risk={customer.risk} /></td><td><button className="row-more" onClick={(event) => { event.stopPropagation(); setSelected(customer); setAdvisorOpen(true) }}><BrainCircuit size={15} /></button></td></tr>)}</tbody></table></div></section>
+          <section className="panel explorer-panel"><div className="panel-heading explorer-heading"><div><h2>Customer explorer</h2><p>Search and inspect account-level churn signals</p></div><div className="explorer-actions"><div className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search customer ID" aria-label="Search customer ID" />{query && <button onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button>}</div><button className="filter-btn"><Filter size={15} /> Filters <span>2</span></button></div></div><div className="table-wrap"><table><thead><tr><th>Customer ID</th><th>Contract</th><th>Internet service</th><th>Tenure</th><th>Monthly charge</th><th>Churn risk</th><th /></tr></thead><tbody>{filtered.map((customer) => <tr key={customer.id} onClick={() => selectCustomer(customer)} className={selected.id === customer.id ? 'selected-row' : ''}><td><strong>{customer.id}</strong></td><td>{customer.contract}</td><td>{customer.internet}</td><td>{customer.tenure} months</td><td>${customer.monthly.toFixed(2)}</td><td><RiskPill risk={customer.risk} /></td><td><button className="row-more" onClick={(event) => { event.stopPropagation(); selectCustomer(customer, true) }}><BrainCircuit size={15} /></button></td></tr>)}</tbody></table></div></section>
 
           <section className="advisor-banner"><div className="advisor-orb"><Bot size={22} /></div><div><div className="advisor-label"><Sparkles size={13} /> AI retention advisor</div><h2>Turn signals into action.</h2><p>Get an explainable retention plan for any customer in seconds.</p></div><div className="advisor-spacer" /><button className="advisor-btn" onClick={getAdvice}>Analyze selected customer <ArrowUpRight size={16} /></button></section>
         </div>
       </main>
-      {advisorOpen && <div className="drawer-backdrop" onClick={() => setAdvisorOpen(false)}><aside className="advisor-drawer" onClick={(event) => event.stopPropagation()}><div className="drawer-head"><div><div className="advisor-label"><Sparkles size={13} /> Explainable AI</div><h2>Retention advisor</h2></div><button className="icon-button" onClick={() => setAdvisorOpen(false)} aria-label="Close"><X size={18} /></button></div><div className="drawer-customer"><div className="priority-avatar">{selected.id.slice(0, 2)}</div><div><strong>{selected.id}</strong><span>{selected.contract} · {selected.internet} · {selected.tenure} months</span></div><RiskPill risk={selected.risk} /></div><div className="drawer-section"><span className="section-kicker">RISK SUMMARY</span><div className="summary-box"><AlertTriangle size={18} /><p>This account shows a <strong>{selected.risk >= 70 ? 'high' : 'moderate'} likelihood of churn</strong> based on contract type, tenure, and current service signals.</p></div></div><div className="drawer-section"><span className="section-kicker">KEY SIGNALS</span><ul className="signal-list"><li><span>Contract</span><strong>{selected.contract} <em>high impact</em></strong></li><li><span>Monthly charge</span><strong>${selected.monthly.toFixed(2)} <em>medium impact</em></strong></li><li><span>Payment method</span><strong>{selected.payment} <em>medium impact</em></strong></li></ul></div><div className="drawer-section"><span className="section-kicker">RETENTION PLAN</span>{aiLoading ? <div className="loading-state"><Sparkles size={18} /> Generating explainable recommendations…</div> : aiText ? <div className="ai-result">{aiText}</div> : <div className="recommendation"><div className="recommendation-icon"><ShieldCheck size={17} /></div><div><strong>Offer a contract incentive</strong><p>Present a 3-month loyalty discount and a long-term plan with added benefits.</p></div></div>}</div>{!aiText && !aiLoading && <button className="drawer-cta" onClick={getAdvice}><Sparkles size={16} /> Generate personalized plan</button>}</aside></div>}
+      {advisorOpen && <div className="drawer-backdrop" onClick={() => setAdvisorOpen(false)}><aside className="advisor-drawer" onClick={(event) => event.stopPropagation()}><div className="drawer-head"><div><div className="advisor-label"><Sparkles size={13} /> Explainable AI</div><h2>Retention advisor</h2></div><button className="icon-button" onClick={() => setAdvisorOpen(false)} aria-label="Close"><X size={18} /></button></div><div className="drawer-customer"><div className="priority-avatar">{selected.id.slice(0, 2)}</div><div><strong>{selected.id}</strong><span>{selected.contract} · {selected.internet} · {selected.tenure} months</span></div><RiskPill risk={selected.risk} /></div><div className="drawer-section"><span className="section-kicker">RISK SUMMARY</span><div className="summary-box"><AlertTriangle size={18} /><p>This account shows a <strong>{selected.risk >= 70 ? 'high' : 'moderate'} likelihood of churn</strong> based on contract type, tenure, and current service signals.</p></div></div><div className="drawer-section"><span className="section-kicker">KEY SIGNALS</span><ul className="signal-list"><li><span>Contract</span><strong>{selected.contract} <em>high impact</em></strong></li><li><span>Monthly charge</span><strong>${selected.monthly.toFixed(2)} <em>medium impact</em></strong></li><li><span>Payment method</span><strong>{selected.payment} <em>medium impact</em></strong></li></ul></div><div className="drawer-section"><span className="section-kicker">RETENTION PLAN</span>{aiLoading ? <div className="loading-state"><Sparkles size={18} /> Generating explainable recommendations…</div> : aiText ? <div className="ai-result">{aiText}</div> : <div className="recommendation"><div className="recommendation-icon"><ShieldCheck size={17} /></div><div><strong>{selected.contract === 'Month-to-month' ? 'Offer a contract incentive' : 'Protect the relationship'}</strong><p>{selected.contract === 'Month-to-month' ? `Offer a loyalty discount to move this ${selected.tenure}-month account to a longer-term plan.` : `Recognize this established account and address ${selected.reason.toLowerCase()} before it becomes a churn signal.`}</p></div></div>}</div>{!aiText && !aiLoading && <button className="drawer-cta" onClick={getAdvice}><Sparkles size={16} /> Generate personalized plan</button>}</aside></div>}
     </div>
   )
 }
