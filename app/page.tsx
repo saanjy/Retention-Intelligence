@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import surveySummary from '../public/data/survey-summary.json'
 import {
   Activity,
   AlertTriangle,
@@ -148,6 +149,17 @@ export default function Page() {
 
           <section className="kpi-grid" aria-label="Key performance indicators">
             {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '$64.76', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
+          </section>
+
+          <section className="panel survey-pulse" aria-labelledby="survey-pulse-title">
+            <div className="panel-heading"><div><h2 id="survey-pulse-title">India survey pulse</h2><p>{surveySummary.records} responses from the expanded ChurnIQ telecom survey</p></div><span className="info-label"><Users size={14} /> Survey dataset</span></div>
+            <div className="survey-metrics">
+              <div><span>Leading provider</span><strong>{surveySummary.providers[0][0]}</strong><small>{surveySummary.providers[0][1]} responses</small></div>
+              <div><span>Most common plan</span><strong>{surveySummary.plans[0][0]}</strong><small>{surveySummary.plans[0][1]} responses</small></div>
+              <div><span>Top state</span><strong>{surveySummary.states[0][0]}</strong><small>{surveySummary.states[0][1]} responses</small></div>
+              <div><span>Avg. satisfaction</span><strong>{(surveySummary.satisfaction.reduce((total, item) => total + Number(item[0]) * Number(item[1]), 0) / surveySummary.records).toFixed(1)} / 5</strong><small>weighted survey score</small></div>
+            </div>
+            <div className="survey-provider-list">{surveySummary.providers.map(([provider, count]) => <div key={provider}><span>{provider}</span><i><b style={{ width: `${(Number(count) / surveySummary.records) * 100}%` }} /></i><strong>{count}</strong></div>)}</div>
           </section>
 
           <div className="content-grid">
