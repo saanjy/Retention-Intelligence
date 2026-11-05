@@ -1,0 +1,17 @@
+{
+  "source": "ChurnIQ Telecom Survey Dataset Expanded",
+  "sheet": "Cleaned_Dataset",
+  "records": 32,
+  "states": [["Tamil Nadu",6],["Karnataka",4],["Maharashtra",3],["Gujarat",3],["Uttar Pradesh",3],["Delhi NCR",2],["Telangana",2],["West Bengal",2],["Kerala",2],["Rajasthan",2],["Odisha",1],["Punjab",1],["Haryana",1]],
+  "providers": [["Airtel",10],["Jio",9],["Vi",6],["BSNL",6],["Other",1]],
+  "plans": [["Prepaid",18],["Postpaid",6],["Broadband",6],["Family Plan",2]],
+  "satisfaction": [["4",12],["2",9],["3",7],["5",4]],
+  "rows": [
+    {"id":"SUR-001","state":"Tamil Nadu","provider":"Jio","plan":"Prepaid","spend":400,"satisfaction":4,"issue":"Occasional indoor signal drop during peak evening hours"},
+    {"id":"SUR-002","state":"Karnataka","provider":"Airtel","plan":"Postpaid","spend":650,"satisfaction":4,"issue":"Postpaid taxes make the monthly bill slightly expensive"},
+    {"id":"SUR-003","state":"Maharashtra","provider":"Vi","plan":"Prepaid","spend":400,"satisfaction":2,"issue":"5G availability is inconsistent and 4G speeds drop heavily indoors"},
+    {"id":"SUR-004","state":"Delhi NCR","provider":"Airtel","plan":"Broadband","spend":1000,"satisfaction":5,"issue":"No major issues; router reboot needed once in a while"},
+    {"id":"SUR-005","state":"Telangana","provider":"BSNL","plan":"Prepaid","spend":150,"satisfaction":2,"issue":"Slow 4G data speeds and call connection delays"},
+    {"id":"SUR-006","state":"Tamil Nadu","provider":"Jio","plan":"Prepaid","spend":250,"satisfaction":3,"issue":"Daily data cap finishes quickly during online classes"}
+  ]
+}

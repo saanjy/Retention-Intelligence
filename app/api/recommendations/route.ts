@@ -12,5 +12,7 @@ export async function POST(request: Request) {
   })
   if (!response.ok) return NextResponse.json({ text: 'The advisor service is temporarily unavailable. Review the displayed signals and prioritize a contract incentive, pricing review, and service follow-up.' }, { status: 200 })
   const json = await response.json()
-  return NextResponse.json({ text: json.choices?.[0]?.message?.content || 'No recommendation returned.' })
+  const message = json.choices?.[0]?.message
+  const text = message?.content || message?.reasoning || json.error?.message || 'No recommendation returned.'
+  return NextResponse.json({ text })
 }
