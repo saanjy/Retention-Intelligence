@@ -139,12 +139,6 @@ export default function Page() {
         <nav className="nav-list" aria-label="Main navigation">
           {nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${active === label ? 'active' : ''}`} onClick={() => navigateTo(label)}><Icon size={17} /><span>{label}</span>{label === 'Retention advisor' && <span className="nav-badge">AI</span>}</button>)}
         </nav>
-        <section className="sidebar-customer-list" aria-labelledby="sidebar-customers-title">
-          <div className="sidebar-section-heading"><span id="sidebar-customers-title">Customers</span><button className="sidebar-view-all" onClick={() => navigateTo('Customer explorer')}>View all <span>{customers.length}</span></button></div>
-          <div className="sidebar-customer-scroll">
-            {customers.map((customer) => <button key={customer.id} className={`sidebar-customer ${selected.id === customer.id ? 'selected' : ''}`} onClick={() => selectCustomer(customer)} aria-label={`Inspect customer ${customer.id}`}><span className="sidebar-customer-dot" data-risk={customer.risk >= 80 ? 'high' : customer.risk >= 60 ? 'medium' : 'low'} /><span className="sidebar-customer-id">{customer.id}</span><span className="sidebar-customer-risk">{customer.risk}%</span></button>)}
-          </div>
-        </section>
       </aside>
 
       <main className="main-content">
@@ -154,7 +148,7 @@ export default function Page() {
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, user<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><button className="export-btn" onClick={exportReport}><Download size={16} /> Export report</button></div>
 
           <section className="kpi-grid" aria-label="Key performance indicators">
-            {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
+            {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '$64.76', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
           </section>
 
           <section className="panel survey-pulse" aria-labelledby="survey-pulse-title">
