@@ -109,6 +109,10 @@ export default function Page() {
   }
 
   function navigateTo(label: string) {
+    if (label === 'Customer explorer') {
+      window.location.href = '/customers'
+      return
+    }
     setActive(label)
     setMobileOpen(false)
     if (label === 'Retention advisor') {
