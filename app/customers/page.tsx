@@ -59,7 +59,7 @@ export default function CustomersPage() {
         <div className="records-table-wrap">
           <table>
             <thead><tr><th>Customer ID</th><th>Provider</th><th>State</th><th>Plan</th><th>Payment</th><th>Tenure</th><th>Monthly spend</th><th>Satisfaction</th><th>Risk</th><th>Biggest problem</th></tr></thead>
-            <tbody>{filteredCustomers.map((customer) => <tr key={customer.id}><td><strong>{customer.id}</strong></td><td>{customer.provider}</td><td>{customer.state}</td><td>{customer.contract}</td><td>{customer.payment}</td><td>{customer.tenure} mo.</td><td>₹{customer.monthly.toLocaleString('en-IN')}</td><td>{customer.satisfaction} / 5</td><td><span className={`record-risk ${riskLabel(customer.risk).toLowerCase()}`}>{riskLabel(customer.risk)} · {customer.risk}%</span></td><td className="problem-cell">{customer.issue || 'No issue recorded'}</td></tr>)}</tbody>
+            <tbody>{filteredCustomers.map((customer) => <tr key={customer.id}><td data-label="Customer ID"><strong>{customer.id}</strong></td><td data-label="Provider">{customer.provider}</td><td data-label="State">{customer.state}</td><td data-label="Plan">{customer.contract}</td><td data-label="Payment">{customer.payment}</td><td data-label="Tenure">{customer.tenure} mo.</td><td data-label="Monthly spend">₹{customer.monthly.toLocaleString('en-IN')}</td><td data-label="Satisfaction">{customer.satisfaction} / 5</td><td data-label="Risk"><span className={`record-risk ${riskLabel(customer.risk).toLowerCase()}`}>{riskLabel(customer.risk)} · {customer.risk}%</span></td><td data-label="Biggest problem" className="problem-cell">{customer.issue || 'No issue recorded'}</td></tr>)}</tbody>
           </table>
         </div>
       </section>
