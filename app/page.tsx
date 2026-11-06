@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import surveySummary from '../public/data/survey-summary.json'
+import customerData from '../public/data/customer-data.json'
 import {
   Activity,
   AlertTriangle,
@@ -29,14 +30,23 @@ type Customer = {
   contract: string
   internet: string
   payment: string
-  tenure: number
+  tenure: number | string
   monthly: number
   churn: boolean
   risk: number
   reason: string
+  provider: string
+  state: string
+  satisfaction: number
+  issue: string
+  age: string
+  gender: string
+  networkRating: number
+  continueLikelihood: number
+  improvement: string
 }
 
-const customers: Customer[] = [
+const featuredCustomers = [
   { id: '3668-QPYBK', contract: 'Month-to-month', internet: 'DSL', payment: 'Mailed check', tenure: 2, monthly: 53.85, churn: true, risk: 86, reason: 'Competitor made better offer' },
   { id: '9237-HQITU', contract: 'Month-to-month', internet: 'Fiber optic', payment: 'Electronic check', tenure: 2, monthly: 70.7, churn: true, risk: 67, reason: 'Moved' },
   { id: '9305-CDSKC', contract: 'Month-to-month', internet: 'Fiber optic', payment: 'Electronic check', tenure: 8, monthly: 99.65, churn: true, risk: 86, reason: 'Moved' },
@@ -46,6 +56,8 @@ const customers: Customer[] = [
   { id: '5248-YGIJN', contract: 'Two year', internet: 'DSL', payment: 'Credit card', tenure: 72, monthly: 90.25, churn: false, risk: 12, reason: 'Stable account' },
   { id: '3655-SNQYZ', contract: 'Two year', internet: 'Fiber optic', payment: 'Credit card', tenure: 69, monthly: 113.25, churn: false, risk: 9, reason: 'Stable account' },
 ]
+
+const allCustomers = customerData as Customer[]
 
 const nav = [
   { label: 'Overview', icon: LayoutDashboard },
@@ -75,7 +87,7 @@ export default function Page() {
   const [active, setActive] = useState('Overview')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState(customers[0])
+  const [selected, setSelected] = useState(allCustomers[0])
   const [advisorOpen, setAdvisorOpen] = useState(false)
   const [aiText, setAiText] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
@@ -97,6 +109,10 @@ export default function Page() {
   }
 
   function navigateTo(label: string) {
+    if (label === 'Customer explorer') {
+      window.location.href = '/customers'
+      return
+    }
     setActive(label)
     setMobileOpen(false)
     if (label === 'Retention advisor') {
@@ -107,7 +123,7 @@ export default function Page() {
   }
 
   function exportReport() {
-    const rows = [['Customer ID', 'Contract', 'Internet service', 'Payment method', 'Tenure months', 'Monthly charge', 'Churn risk'], ...customers.map((customer) => [customer.id, customer.contract, customer.internet, customer.payment, String(customer.tenure), customer.monthly.toFixed(2), `${customer.risk}%`])]
+    const rows = [['Customer ID', 'Contract', 'Internet service', 'Payment method', 'Tenure months', 'Monthly charge', 'Churn risk'], ...allCustomers.map((customer) => [customer.id, customer.contract, customer.internet, customer.payment, String(customer.tenure), customer.monthly.toFixed(2), `${customer.risk}%`])]
     const blob = new Blob([rows.map((row) => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -117,7 +133,7 @@ export default function Page() {
     URL.revokeObjectURL(url)
   }
 
-  const filtered = useMemo(() => customers.filter((customer) => customer.id.toLowerCase().includes(query.toLowerCase())), [query])
+  const filtered = useMemo(() => allCustomers.filter((customer) => customer.id.toLowerCase().includes(query.toLowerCase())), [query])
 
   async function getAdvice() {
     setAiLoading(true)
@@ -148,7 +164,7 @@ export default function Page() {
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, user<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><button className="export-btn" onClick={exportReport}><Download size={16} /> Export report</button></div>
 
           <section className="kpi-grid" aria-label="Key performance indicators">
-            {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '$64.76', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
+            {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '₹5,397', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
           </section>
 
           <section className="panel survey-pulse" aria-labelledby="survey-pulse-title">
@@ -170,14 +186,14 @@ export default function Page() {
 
           <div className="content-grid lower"><section className="panel factors-panel"><div className="panel-heading"><div><h2>What&apos;s driving churn?</h2><p>Top contributing factors from current dataset</p></div><span className="info-label"><CircleHelp size={14} /> Explainable model</span></div><div className="factor-list">{[['Month-to-month contract', 78, 'Contract flexibility'], ['Electronic check payments', 64, 'Payment friction'], ['Fiber optic service', 51, 'Service experience'], ['High monthly charges', 43, 'Price sensitivity']].map(([label, value, detail]) => <div className="factor-row" key={label as string}><div className="factor-meta"><div><strong>{label}</strong><span>{detail}</span></div><b>{value}%</b></div><div className="factor-track"><i style={{ width: `${value}%` }} /></div></div>)}</div><button className="full-link" onClick={() => setActive('Churn analysis')}>Explore all factors <ArrowUpRight size={14} /></button></section>
 
-            <section className="panel priority-panel"><div className="panel-heading"><div><h2>Retention priorities</h2><p>Accounts requiring attention today</p></div><span className="priority-count">{customers.length} accounts</span></div><div className="priority-list">{customers.map((customer) => <button className="priority-row" key={customer.id} onClick={() => selectCustomer(customer, true)}><div className="priority-avatar">{customer.id.slice(0, 2)}</div><div className="priority-info"><strong>{customer.id}</strong><span>{customer.contract} · {customer.tenure} mo.</span></div><RiskPill risk={customer.risk} /><ArrowUpRight size={15} /></button>)}</div><button className="full-link" onClick={() => setActive('Customer explorer')}>See all priority accounts <ArrowUpRight size={14} /></button></section></div>
+            <section className="panel priority-panel"><div className="panel-heading"><div><h2>Retention priorities</h2><p>Accounts requiring attention today</p></div><span className="priority-count">10 shown</span></div><div className="priority-list">{allCustomers.slice(0, 10).map((customer) => <button className="priority-row" key={customer.id} onClick={() => selectCustomer(customer, true)}><div className="priority-avatar">{customer.id.slice(0, 2)}</div><div className="priority-info"><strong>{customer.id}</strong><span>{customer.contract} · {customer.tenure} mo.</span></div><RiskPill risk={customer.risk} /><ArrowUpRight size={15} /></button>)}</div><button className="full-link" onClick={() => setActive('Customer explorer')}>See all priority accounts <ArrowUpRight size={14} /></button></section></div>
 
-          <section className="panel explorer-panel" id="customer-explorer"><div className="panel-heading explorer-heading"><div><h2>Customer explorer</h2><p>Search and inspect account-level churn signals</p></div><div className="explorer-actions"><div className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search customer ID" aria-label="Search customer ID" />{query && <button onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button>}</div><button className="filter-btn"><Filter size={15} /> Filters <span>2</span></button></div></div><div className="table-wrap"><table><thead><tr><th>Customer ID</th><th>Contract</th><th>Internet service</th><th>Tenure</th><th>Monthly charge</th><th>Churn risk</th><th /></tr></thead><tbody>{filtered.map((customer) => <tr key={customer.id} onClick={() => selectCustomer(customer)} className={selected.id === customer.id ? 'selected-row' : ''}><td><strong>{customer.id}</strong></td><td>{customer.contract}</td><td>{customer.internet}</td><td>{customer.tenure} months</td><td>${customer.monthly.toFixed(2)}</td><td><RiskPill risk={customer.risk} /></td><td><button className="row-more" onClick={(event) => { event.stopPropagation(); selectCustomer(customer, true) }}><BrainCircuit size={15} /></button></td></tr>)}</tbody></table></div></section>
+          <section className="panel explorer-panel" id="customer-explorer"><div className="panel-heading explorer-heading"><div><h2>Customer explorer</h2><p>Search and inspect account-level churn signals</p></div><div className="explorer-actions"><div className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search customer ID" aria-label="Search customer ID" />{query && <button onClick={() => setQuery('')} aria-label="Clear search"><X size={14} /></button>}</div><button className="filter-btn"><Filter size={15} /> Filters <span>2</span></button></div></div><div className="table-wrap"><table><thead><tr><th>Customer ID</th><th>Contract</th><th>Internet service</th><th>Tenure</th><th>Monthly charge</th><th>Churn risk</th><th /></tr></thead><tbody>{filtered.slice(0, 10).map((customer) => <tr key={customer.id} onClick={() => selectCustomer(customer)} className={selected.id === customer.id ? 'selected-row' : ''}><td><strong>{customer.id}</strong></td><td>{customer.contract}</td><td>{customer.internet}</td><td>{customer.tenure} months</td><td>₹{customer.monthly.toLocaleString('en-IN')}</td><td><RiskPill risk={customer.risk} /></td><td><button className="row-more" onClick={(event) => { event.stopPropagation(); selectCustomer(customer, true) }}><BrainCircuit size={15} /></button></td></tr>)}</tbody></table></div><div className="customer-detail-card" aria-live="polite"><div className="customer-detail-heading"><div><span className="section-kicker">SELECTED CUSTOMER</span><h3>{selected.id}</h3></div><RiskPill risk={selected.risk} /></div><div className="customer-detail-grid"><div><span>Provider</span><strong>{selected.provider}</strong></div><div><span>State</span><strong>{selected.state}</strong></div><div><span>Plan</span><strong>{selected.contract}</strong></div><div><span>Monthly spend</span><strong>₹{selected.monthly.toLocaleString('en-IN')}</strong></div><div><span>Age / gender</span><strong>{selected.age} · {selected.gender}</strong></div><div><span>Satisfaction</span><strong>{selected.satisfaction} / 5</strong></div><div><span>Network rating</span><strong>{selected.networkRating} / 5</strong></div><div><span>Continue likelihood</span><strong>{selected.continueLikelihood} / 5</strong></div><div className="wide"><span>Biggest problem</span><strong>{selected.issue || 'No issue recorded'}</strong></div><div className="wide"><span>Requested improvement</span><strong>{selected.improvement || 'No improvement recorded'}</strong></div></div></div></section>
 
           <section className="advisor-banner" id="retention-advisor"><div className="advisor-orb"><Bot size={22} /></div><div><div className="advisor-label"><Sparkles size={13} /> AI retention advisor</div><h2>Turn signals into action.</h2><p>Get an explainable retention plan for any customer in seconds.</p></div><div className="advisor-spacer" /><button className="advisor-btn" onClick={getAdvice}>Analyze selected customer <ArrowUpRight size={16} /></button></section>
         </div>
       </main>
-      {advisorOpen && <div className="drawer-backdrop" onClick={() => setAdvisorOpen(false)}><aside className="advisor-drawer" onClick={(event) => event.stopPropagation()}><div className="drawer-head"><div><div className="advisor-label"><Sparkles size={13} /> Explainable AI</div><h2>Retention advisor</h2></div><button className="icon-button" onClick={() => setAdvisorOpen(false)} aria-label="Close"><X size={18} /></button></div><div className="drawer-customer"><div className="priority-avatar">{selected.id.slice(0, 2)}</div><div><strong>{selected.id}</strong><span>{selected.contract} · {selected.internet} · {selected.tenure} months</span></div><RiskPill risk={selected.risk} /></div><div className="drawer-section"><span className="section-kicker">RISK SUMMARY</span><div className="summary-box"><AlertTriangle size={18} /><p>This account shows a <strong>{selected.risk >= 70 ? 'high' : 'moderate'} likelihood of churn</strong> based on contract type, tenure, and current service signals.</p></div></div><div className="drawer-section"><span className="section-kicker">KEY SIGNALS</span><ul className="signal-list"><li><span>Contract</span><strong>{selected.contract} <em>high impact</em></strong></li><li><span>Monthly charge</span><strong>${selected.monthly.toFixed(2)} <em>medium impact</em></strong></li><li><span>Payment method</span><strong>{selected.payment} <em>medium impact</em></strong></li></ul></div><div className="drawer-section"><span className="section-kicker">RETENTION PLAN</span>{aiLoading ? <div className="loading-state"><Sparkles size={18} /> Generating explainable recommendations…</div> : aiText ? <div className="ai-result">{aiText}</div> : <div className="recommendation"><div className="recommendation-icon"><ShieldCheck size={17} /></div><div><strong>{selected.contract === 'Month-to-month' ? 'Offer a contract incentive' : 'Protect the relationship'}</strong><p>{selected.contract === 'Month-to-month' ? `Offer a loyalty discount to move this ${selected.tenure}-month account to a longer-term plan.` : `Recognize this established account and address ${selected.reason.toLowerCase()} before it becomes a churn signal.`}</p></div></div>}</div>{!aiText && !aiLoading && <button className="drawer-cta" onClick={getAdvice}><Sparkles size={16} /> Generate personalized plan</button>}</aside></div>}
+      {advisorOpen && <div className="drawer-backdrop" onClick={() => setAdvisorOpen(false)}><aside className="advisor-drawer" onClick={(event) => event.stopPropagation()}><div className="drawer-head"><div><div className="advisor-label"><Sparkles size={13} /> Explainable AI</div><h2>Retention advisor</h2></div><button className="icon-button" onClick={() => setAdvisorOpen(false)} aria-label="Close"><X size={18} /></button></div><div className="drawer-customer"><div className="priority-avatar">{selected.id.slice(0, 2)}</div><div><strong>{selected.id}</strong><span>{selected.contract} · {selected.internet} · {selected.tenure} months</span></div><RiskPill risk={selected.risk} /></div><div className="drawer-section"><span className="section-kicker">RISK SUMMARY</span><div className="summary-box"><AlertTriangle size={18} /><p>This account shows a <strong>{selected.risk >= 70 ? 'high' : 'moderate'} likelihood of churn</strong> based on contract type, tenure, and current service signals.</p></div></div><div className="drawer-section"><span className="section-kicker">KEY SIGNALS</span><ul className="signal-list"><li><span>Contract</span><strong>{selected.contract} <em>high impact</em></strong></li><li><span>Monthly charge</span><strong>₹{selected.monthly.toLocaleString('en-IN')} <em>medium impact</em></strong></li><li><span>Payment method</span><strong>{selected.payment} <em>medium impact</em></strong></li></ul></div><div className="drawer-section"><span className="section-kicker">RETENTION PLAN</span>{aiLoading ? <div className="loading-state"><Sparkles size={18} /> Generating explainable recommendations…</div> : aiText ? <div className="ai-result">{aiText}</div> : <div className="recommendation"><div className="recommendation-icon"><ShieldCheck size={17} /></div><div><strong>{selected.contract === 'Month-to-month' ? 'Offer a contract incentive' : 'Protect the relationship'}</strong><p>{selected.contract === 'Month-to-month' ? `Offer a loyalty discount to move this ${selected.tenure}-month account to a longer-term plan.` : `Recognize this established account and address ${selected.reason.toLowerCase()} before it becomes a churn signal.`}</p></div></div>}</div>{!aiText && !aiLoading && <button className="drawer-cta" onClick={getAdvice}><Sparkles size={16} /> Generate personalized plan</button>}</aside></div>}
     </div>
   )
 }
