@@ -13,7 +13,6 @@ import {
   CircleHelp,
   ChevronDown,
   Download,
-  FileText,
   Filter,
   Gauge,
   LayoutDashboard,
@@ -65,7 +64,6 @@ const nav = [
   { label: 'Customer explorer', icon: Users },
   { label: 'Risk analysis', icon: Gauge },
   { label: 'Retention advisor', icon: BrainCircuit },
-  { label: 'Reports', icon: FileText },
 ]
 
 const sectionIds: Record<string, string> = {
@@ -73,8 +71,7 @@ const sectionIds: Record<string, string> = {
   'Churn analysis': 'churn-analysis',
   'Customer explorer': 'customer-explorer',
   'Risk analysis': 'risk-analysis',
-  'Retention advisor': 'retention-advisor',
-  Reports: 'reports',
+    'Retention advisor': 'retention-advisor',
 }
 
 function RiskPill({ risk }: { risk: number }) {
@@ -86,6 +83,7 @@ function RiskPill({ risk }: { risk: number }) {
 export default function Page() {
   const [active, setActive] = useState('Overview')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(allCustomers[0])
   const [advisorOpen, setAdvisorOpen] = useState(false)
@@ -122,15 +120,26 @@ export default function Page() {
     document.getElementById(sectionIds[label])?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function exportReport() {
-    const rows = [['Customer ID', 'Contract', 'Internet service', 'Payment method', 'Tenure months', 'Monthly charge', 'Churn risk'], ...allCustomers.map((customer) => [customer.id, customer.contract, customer.internet, customer.payment, String(customer.tenure), customer.monthly.toFixed(2), `${customer.risk}%`])]
-    const blob = new Blob([rows.map((row) => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'signal-retention-report.csv'
-    link.click()
-    URL.revokeObjectURL(url)
+  function exportReport(format: 'csv' | 'pdf') {
+    const headers = ['Customer ID', 'Contract', 'Internet service', 'Payment method', 'Tenure months', 'Monthly charge', 'Churn risk']
+    const rows = [headers, ...allCustomers.map((customer) => [customer.id, customer.contract, customer.internet, customer.payment, String(customer.tenure), `₹${customer.monthly.toFixed(2)}`, `${customer.risk}%`])]
+    if (format === 'csv') {
+      const csv = rows.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n')
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'signal-retention-report.csv'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return
+    }
+    const reportWindow = window.open('', '_blank')
+    if (!reportWindow) return
+    const tableRows = rows.slice(1).map((row) => `<tr>${row.map((value) => `<td>${value}</td>`).join('')}</tr>`).join('')
+    reportWindow.document.write(`<html><head><title>Signal retention report</title><style>body{font:12px Arial;color:#102a3a;padding:24px}h1{font-size:22px}p{color:#607985}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d8e3e2;padding:6px;text-align:left}th{background:#edf6f4}@media print{body{padding:0}}</style></head><body><h1>Signal retention report</h1><p>${allCustomers.length} customer records · Generated ${new Date().toLocaleDateString()}</p><table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table><script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script></body></html>`)
+    reportWindow.document.close()
   }
 
   const filtered = useMemo(() => allCustomers.filter((customer) => customer.id.toLowerCase().includes(query.toLowerCase())), [query])
@@ -161,10 +170,10 @@ export default function Page() {
         <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu"><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><span>/</span><strong>{active}</strong></div></header>
 
         <div className="page-wrap" id="overview">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, user<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><button className="export-btn" onClick={exportReport}><Download size={16} /> Export report</button></div>
+          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, user<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><div className="export-wrap"><button className="export-btn" onClick={() => setExportOpen((open) => !open)} aria-expanded={exportOpen}><Download size={16} /> Export report <ChevronDown size={14} /></button>{exportOpen && <div className="export-menu" role="menu"><button role="menuitem" onClick={() => { exportReport('csv'); setExportOpen(false) }}>Download CSV</button><button role="menuitem" onClick={() => { exportReport('pdf'); setExportOpen(false) }}>Print / Save PDF</button></div>}</div></div>
 
           <section className="kpi-grid" aria-label="Key performance indicators">
-            {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '₹5,397', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
+            {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '₹300', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
           </section>
 
           <section className="panel survey-pulse" aria-labelledby="survey-pulse-title">
@@ -179,9 +188,9 @@ export default function Page() {
           </section>
 
           <div className="content-grid">
-            <section className="panel trend-panel" id="churn-analysis"><div className="panel-heading"><div><h2>Churn overview</h2><p>Customer movement over the last 12 months</p></div><button className="select-button">Last 12 months <ChevronDown size={14} /></button></div><div className="trend-chart"><div className="y-labels"><span>800</span><span>600</span><span>400</span><span>200</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div><svg className="chart-svg" viewBox="0 0 700 205" preserveAspectRatio="none" aria-label="Churn trend chart"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#ff816d" stopOpacity=".24" /><stop offset="100%" stopColor="#ff816d" stopOpacity="0" /></linearGradient></defs><path d="M0,172 C35,165 42,130 78,148 S120,130 158,142 S205,130 235,118 S270,132 300,120 S347,96 382,112 S416,105 450,88 S490,104 525,80 S562,62 594,78 S635,46 700,54 L700,205 L0,205 Z" fill="url(#fill)" /><path d="M0,172 C35,165 42,130 78,148 S120,130 158,142 S205,130 235,118 S270,132 300,120 S347,96 382,112 S416,105 450,88 S490,104 525,80 S562,62 594,78 S635,46 700,54" fill="none" stroke="#ff816d" strokeWidth="3" /></svg><div className="x-labels"><span>Dec</span><span>Feb</span><span>Apr</span><span>Jun</span><span>Aug</span><span>Oct</span></div></div></div><div className="chart-legend"><span><i className="legend-dot churn" /> Churned</span><span><i className="legend-dot retained" /> Retained</span><span className="chart-insight"><Sparkles size={13} /> Churn accelerated 8.2% in the last 30 days</span></div></section>
+            <section className="panel trend-panel" id="churn-analysis"><div className="panel-heading"><div><h2>Churn overview</h2><p>Customer movement over the last 12 months</p></div><button className="select-button" aria-label="Open churn overview range">Overview <ChevronDown size={14} /></button></div><div className="trend-chart"><div className="y-labels"><span>800</span><span>600</span><span>400</span><span>200</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div><svg className="chart-svg" viewBox="0 0 700 205" preserveAspectRatio="none" aria-label="Churn trend chart"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#ff816d" stopOpacity=".24" /><stop offset="100%" stopColor="#ff816d" stopOpacity="0" /></linearGradient></defs><path d="M0,172 C35,165 42,130 78,148 S120,130 158,142 S205,130 235,118 S270,132 300,120 S347,96 382,112 S416,105 450,88 S490,104 525,80 S562,62 594,78 S635,46 700,54 L700,205 L0,205 Z" fill="url(#fill)" /><path d="M0,172 C35,165 42,130 78,148 S120,130 158,142 S205,130 235,118 S270,132 300,120 S347,96 382,112 S416,105 450,88 S490,104 525,80 S562,62 594,78 S635,46 700,54" fill="none" stroke="#ff816d" strokeWidth="3" /></svg><div className="x-labels"><span>Dec</span><span>Feb</span><span>Apr</span><span>Jun</span><span>Aug</span><span>Oct</span></div></div></div><div className="chart-legend"><span><i className="legend-dot churn" /> Churned</span><span><i className="legend-dot retained" /> Retained</span><span className="chart-insight"><Sparkles size={13} /> Churn accelerated 8.2% in the last 30 days</span></div></section>
 
-            <section className="panel risk-panel" id="risk-analysis"><div className="panel-heading"><div><h2>Risk distribution</h2><p>Based on model predictions</p></div><button className="icon-button"><Download size={16} /></button></div><div className="risk-ring-wrap"><div className="risk-ring"><div><strong>26.5%</strong><span>at risk</span></div></div></div><div className="risk-breakdown"><div><i className="risk-bar high" /><span>High risk</span><strong>1,104 <small>15.7%</small></strong></div><div><i className="risk-bar medium" /><span>Medium risk</span><strong>765 <small>10.9%</small></strong></div><div><i className="risk-bar low" /><span>Low risk</span><strong>5,174 <small>73.4%</small></strong></div></div><button className="full-link" onClick={() => setActive('Risk analysis')}>View risk analysis <ArrowUpRight size={14} /></button></section>
+            <section className="panel risk-panel" id="risk-analysis"><div className="panel-heading"><div><h2>Risk distribution</h2><p>Based on model predictions</p></div></div><div className="risk-ring-wrap"><div className="risk-ring"><div><strong>26.5%</strong><span>at risk</span></div></div></div><div className="risk-breakdown"><div><i className="risk-bar high" /><span>High risk</span><strong>1,104 <small>15.7%</small></strong></div><div><i className="risk-bar medium" /><span>Medium risk</span><strong>765 <small>10.9%</small></strong></div><div><i className="risk-bar low" /><span>Low risk</span><strong>5,174 <small>73.4%</small></strong></div></div><button className="full-link" onClick={() => setActive('Risk analysis')}>View risk analysis <ArrowUpRight size={14} /></button></section>
           </div>
 
           <div className="content-grid lower"><section className="panel factors-panel"><div className="panel-heading"><div><h2>What&apos;s driving churn?</h2><p>Top contributing factors from current dataset</p></div><span className="info-label"><CircleHelp size={14} /> Explainable model</span></div><div className="factor-list">{[['Month-to-month contract', 78, 'Contract flexibility'], ['Electronic check payments', 64, 'Payment friction'], ['Fiber optic service', 51, 'Service experience'], ['High monthly charges', 43, 'Price sensitivity']].map(([label, value, detail]) => <div className="factor-row" key={label as string}><div className="factor-meta"><div><strong>{label}</strong><span>{detail}</span></div><b>{value}%</b></div><div className="factor-track"><i style={{ width: `${value}%` }} /></div></div>)}</div><button className="full-link" onClick={() => setActive('Churn analysis')}>Explore all factors <ArrowUpRight size={14} /></button></section>
