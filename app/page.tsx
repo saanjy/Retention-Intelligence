@@ -86,6 +86,7 @@ function RiskPill({ risk }: { risk: number }) {
 export default function Page() {
   const [active, setActive] = useState('Overview')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(allCustomers[0])
   const [advisorOpen, setAdvisorOpen] = useState(false)
@@ -122,15 +123,24 @@ export default function Page() {
     document.getElementById(sectionIds[label])?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function exportReport() {
-    const rows = [['Customer ID', 'Contract', 'Internet service', 'Payment method', 'Tenure months', 'Monthly charge', 'Churn risk'], ...allCustomers.map((customer) => [customer.id, customer.contract, customer.internet, customer.payment, String(customer.tenure), customer.monthly.toFixed(2), `${customer.risk}%`])]
-    const blob = new Blob([rows.map((row) => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'signal-retention-report.csv'
-    link.click()
-    URL.revokeObjectURL(url)
+  function exportReport(format: 'csv' | 'pdf') {
+    const headers = ['Customer ID', 'Contract', 'Internet service', 'Payment method', 'Tenure months', 'Monthly charge', 'Churn risk']
+    const rows = [headers, ...allCustomers.map((customer) => [customer.id, customer.contract, customer.internet, customer.payment, String(customer.tenure), `₹${customer.monthly.toFixed(2)}`, `${customer.risk}%`])]
+    if (format === 'csv') {
+      const csv = rows.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n')
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'signal-retention-report.csv'
+      link.click()
+      URL.revokeObjectURL(url)
+      return
+    }
+    const reportWindow = window.open('', '_blank', 'noopener,noreferrer')
+    if (!reportWindow) return
+    const tableRows = rows.slice(1).map((row) => `<tr>${row.map((value) => `<td>${value}</td>`).join('')}</tr>`).join('')
+    reportWindow.document.write(`<html><head><title>Signal retention report</title><style>body{font:12px Arial;color:#102a3a;padding:24px}h1{font-size:22px}p{color:#607985}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d8e3e2;padding:6px;text-align:left}th{background:#edf6f4}@media print{body{padding:0}}</style></head><body><h1>Signal retention report</h1><p>${allCustomers.length} customer records · Generated ${new Date().toLocaleDateString()}</p><table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table><script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script></body></html>`)
+    reportWindow.document.close()
   }
 
   const filtered = useMemo(() => allCustomers.filter((customer) => customer.id.toLowerCase().includes(query.toLowerCase())), [query])
@@ -161,7 +171,7 @@ export default function Page() {
         <header className="topbar"><button className="mobile-menu" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu"><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><span>/</span><strong>{active}</strong></div></header>
 
         <div className="page-wrap" id="overview">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, user<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><button className="export-btn" onClick={exportReport}><Download size={16} /> Export report</button></div>
+          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> {today || 'Today'}</div><h1>{greeting}, user<span className="heading-accent">.</span></h1><p>Here&apos;s what&apos;s happening across your customer base.</p></div><div className="export-wrap"><button className="export-btn" onClick={() => setExportOpen((open) => !open)} aria-expanded={exportOpen}><Download size={16} /> Export report <ChevronDown size={14} /></button>{exportOpen && <div className="export-menu" role="menu"><button role="menuitem" onClick={() => { exportReport('csv'); setExportOpen(false) }}>Download CSV</button><button role="menuitem" onClick={() => { exportReport('pdf'); setExportOpen(false) }}>Print / Save PDF</button></div>}</div></div>
 
           <section className="kpi-grid" aria-label="Key performance indicators">
             {[['Total customers', '7,043', '+4.8%', 'users'], ['Churned customers', '1,869', '+2.1%', 'alert'], ['Churn rate', '26.5%', '-1.4%', 'rate'], ['Avg. monthly charge', '₹300', '+3.2%', 'money']].map(([label, value, delta, icon]) => <div className="kpi-card" key={label}><div className="kpi-top"><span>{label}</span><div className={`kpi-icon ${icon}`}><Gauge size={16} /></div></div><div className="kpi-value">{value}</div><div className={`kpi-delta ${delta.startsWith('-') ? 'positive' : ''}`}><ArrowUpRight size={13} /> {delta} <span>vs last month</span></div></div>)}
