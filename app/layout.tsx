@@ -6,9 +6,8 @@ export const metadata: Metadata = {
   title: 'Signal — Retention Intelligence',
   description: 'Explainable telecom churn analytics and AI-powered retention recommendations.',
   generator: 'v0.app',
-  icons: {
-    icon: '/icon.svg',
-    apple: '/apple-icon.png',
+icons: {
+    icon: '/favicon.svg',
   },
 }
 
