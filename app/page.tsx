@@ -13,7 +13,6 @@ import {
   CircleHelp,
   ChevronDown,
   Download,
-  FileText,
   Filter,
   Gauge,
   LayoutDashboard,
@@ -65,7 +64,6 @@ const nav = [
   { label: 'Customer explorer', icon: Users },
   { label: 'Risk analysis', icon: Gauge },
   { label: 'Retention advisor', icon: BrainCircuit },
-  { label: 'Reports', icon: FileText },
 ]
 
 const sectionIds: Record<string, string> = {
@@ -73,8 +71,7 @@ const sectionIds: Record<string, string> = {
   'Churn analysis': 'churn-analysis',
   'Customer explorer': 'customer-explorer',
   'Risk analysis': 'risk-analysis',
-  'Retention advisor': 'retention-advisor',
-  Reports: 'reports',
+    'Retention advisor': 'retention-advisor',
 }
 
 function RiskPill({ risk }: { risk: number }) {
