@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Explainable telecom churn analytics and AI-powered retention recommendations.',
   generator: 'v0.app',
 icons: {
-    icon: '/favicon.svg',
+    icon: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Pkg8CxeImKz8O1pSKy3VNbADwjmAsj.png',
   },
 }
 
