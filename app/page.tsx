@@ -138,7 +138,7 @@ export default function Page() {
     const reportWindow = window.open('', '_blank')
     if (!reportWindow) return
     const tableRows = rows.slice(1).map((row) => `<tr>${row.map((value) => `<td>${value}</td>`).join('')}</tr>`).join('')
-    reportWindow.document.write(`<html><head><title>SIGNAL RETENTION REPORT</title><style>body{font:12px Arial;color:#102a3a;padding:24px}h1{font-size:22px}p{color:#607985}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d8e3e2;padding:6px;text-align:left}th{background:#edf6f4}@media print{body{padding:0}}</style></head><body><h1>Signal retention report</h1><p>${allCustomers.length} customer records · Generated ${new Date().toLocaleDateString()}</p><table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table><script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script></body></html>`)
+    reportWindow.document.write(`<html><head><title>Signal Retention Report</title><style>body{font:12px Arial;color:#102a3a;padding:24px}h1{font-size:22px}p{color:#607985}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d8e3e2;padding:6px;text-align:left}th{background:#edf6f4}@media print{body{padding:0}}</style></head><body><h1>Signal retention report</h1><p>${allCustomers.length} customer records · Generated ${new Date().toLocaleDateString()}</p><table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table><script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script></body></html>`)
     reportWindow.document.close()
   }
 
